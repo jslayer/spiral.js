@@ -19,6 +19,8 @@ var boxes = [
   { width: 218, height: 148 }
 ];
 
+var container = document.querySelector('.container');
+
 /**
  * Lets sort boxes by its height
  */
@@ -43,6 +45,7 @@ function getContainerSize() {
     height : window.innerHeight
   };
 }
+
 var containerSize;
 
 var border = 10;
@@ -213,8 +216,6 @@ function paint() {
     }));
   }
 
-  var container = document.querySelector('.container');
-
   container.style.top = -1 * minTop + containerPadding.top + 'px';
   container.style.minHeight = heightFilled.top + heightFilled.bottom - containerPadding.top + containerPadding.bottom - Math.abs(minTop) + 'px';
 
@@ -235,10 +236,12 @@ function paint() {
         item.node.style.position = 'absolute';
 
         item.node.style.backgroundColor = 'red';
+
+        item.node.style.width = item.width + 'px';
+        item.node.style.height = item.height + 'px';
+
         container.appendChild(item.node);
       }
-      item.node.style.width = item.width + 'px';
-      item.node.style.height = item.height + 'px';
       item.node.style.top = item.top + 'px';
       item.node.style.left = item.left + 'px';
       item.node.innerText = i + ' : ' + index;
