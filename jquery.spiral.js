@@ -1,10 +1,10 @@
 (function($) {
   $.fn.spiral = function(options) {
     options = $.extend({
-      'boxSelector' : '>*',
-      'boxOffset'   : 10,  //px
-      'transition'  : 700, //ms
-      'containerPadding' : {
+      boxSelector      : '>*',
+      boxOffset        : 10,  //px
+      transition       : 700, //ms
+      containerPadding : {
         left   : 10, //px
         top    : 10, //px
         right  : 10, //px
