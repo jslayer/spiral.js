@@ -1,4 +1,7 @@
 (function($) {
+  //todo - change for..in to $.each
+  //todo - newer use `if (expr) something` - use `if (expr) {\n something;\n}` instead;
+
   $.fn.spiral = function(options) {
     options = $.extend({
       boxSelector      : '>*',
@@ -34,6 +37,7 @@
 
         onResize();
 
+        //todo - we should not use global listener here
         window.onresize = function() {
           clearTimeout(timerId);
           timerId = setTimeout(onResize, 200);
@@ -240,7 +244,7 @@
   };
 
   // Common functions
-
+  //todo - use $.grep instead of custom function
   function filterArray(arr, callback, scope) {
     var filtered = [], i;
 
@@ -258,8 +262,9 @@
     }
 
     return filtered;
-  };
+  }
 
+  //todo - use $.map instead of custom function
   function mapArray(arr, callback, scope) {
     var mapped = [], i;
 
@@ -277,7 +282,7 @@
     }
 
     return mapped;
-  };
+  }
 
   function getPrefix() {
     var ua = navigator.userAgent, name = '';
@@ -289,5 +294,5 @@
     if (ua.search(/Safari/) >= 0) name = '-webkit-';
 
     return name;
-  };
+  }
 })(jQuery);
