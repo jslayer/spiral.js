@@ -19,35 +19,6 @@ var boxes = [
   { width: 218, height: 148 }
 ];
 
-//sort those, who have equal height
-//sort those, who have equal width
-/**
- * SHIT : There should be a limited number of allowed size;
- * SHIT : With unknown number of the images for each size;
- *
- * SHIT : Lets use 14:9 (so we will be able to use 16:10 (with small crop)
- *
- */
-
-var equalSize = [ ];
-var equalHeight = [ ];
-
-/**
- * Lets just sort the block by its area
- */
-
-/*console.log(boxes.sort(function(a, b) {
-  var aa = a.width * a.height,
-    bb = b.width * b.height,
-    result = 0;
-
-  if (aa !== bb) {
-    result = aa > bb ? 1 : -1;
-  }
-
-  return result;
-}));*/
-
 /**
  * Lets sort boxes by its height
  */
@@ -95,6 +66,7 @@ function prepareRowIndex(box) {
     row = rows[rowIndex] = rows[rowIndex] || [ ];
 
     width += (row.length + 1) * border;
+
     row.forEach(function(item) {
       width += item.width;
     });
@@ -119,14 +91,14 @@ function paint() {
     top  : Math.floor(containerSize.height / 2)
   };
 
-  var i = boxes.length;
+  var boxesCounter = boxes.length;
 
   rows = {};
 
   rowIndex = 1;
 
-  while(--i >= 0) {
-    var box = boxes[i];
+  while(--boxesCounter >= 0) {
+    var box = boxes[boxesCounter];
 
     if (box.width + border * 2 > containerSize.width) {
       //skip long picture
@@ -148,16 +120,21 @@ function paint() {
 //paint them
   var minTop = 0;
 
-  for(i in rows) {
+  var currentRowIndex;
+
+  for(currentRowIndex in rows) {
     var filled = {
       left : 0
     };
 
-    if (!rows.hasOwnProperty(i)) {
+    if (!rows.hasOwnProperty(currentRowIndex)) {
       continue;
     }
 
-    row = rows[i];
+    currentRowIndex = parseInt(currentRowIndex, 10);
+
+
+    row = rows[currentRowIndex];
 
     var rowWidth = (row.length + 1) * border,
       leftDelta = border;
@@ -177,7 +154,7 @@ function paint() {
 
       filled.left += item.width + border;
 
-      if (i > 0) {
+      if (currentRowIndex > 0) {
         item.top = center.top - heightFilled.top - item.height;
       }
       else {
@@ -185,14 +162,55 @@ function paint() {
       }
 
       minTop = Math.min(minTop, item.top);
+
+      /**
+       * in order to have less whitespaces we should move boxes closer if possible
+       */
+      var nearRow, minDistance;
+
+      if (Math.abs(currentRowIndex) > 1) {
+        nearRow = rows[currentRowIndex - (currentRowIndex > 0 ? 1 : -1)].filter(function(item, ix) {
+          var result = false,
+            x1 = this.left,
+            x2 = item.left + border,//???
+            xw1 = x1 + this.width,
+            xw2 = x2 + item.width;
+
+          if (x1 >= x2 && x1 <= xw2 || xw1 >= x2 && xw1 <= xw2 || x2 >= x1 && x2 <= xw1 || xw2 >= x1 && xw2 <= xw1) {
+            result = true;
+          }
+
+          return result;
+        }, item);
+
+        minDistance = Math.min.apply(Math, nearRow.map(function(item) {
+          var value;
+
+          if (currentRowIndex > 0) {
+            value = item.top - this.top - this.height;
+          }
+          else {
+            value = this.top - item.top - item.height;
+          }
+          return value;
+        }, item));
+
+        if (minDistance > border) {
+          item.top += (currentRowIndex > 0 ? 1 : -1) * (minDistance - border);
+        }
+      }
     });
 
-    heightFilled[i > 0 ? 'top' : 'bottom'] += 1.5 * border + Math.max.apply(Math, row.map(function(item){ return item.height }));
+    heightFilled[currentRowIndex > 0 ? 'top' : 'bottom'] += border + Math.max.apply(Math, row.map(function(item){
+      return item.height
+    }));
   }
 
   var container = document.querySelector('.container');
 
   container.style.top = -1 * minTop + 'px';
+
+  var i;
 
   for(i in rows) {
     var row;
@@ -203,7 +221,7 @@ function paint() {
 
     row = rows[i];
 
-    row.forEach(function(item) {
+    row.forEach(function(item, index) {
       if (!item.node) {
         item.node = document.createElement('div');
         item.node.style.position = 'absolute';
@@ -215,14 +233,12 @@ function paint() {
       item.node.style.height = item.height + 'px';
       item.node.style.top = item.top + 'px';
       item.node.style.left = item.left + 'px';
+      item.node.innerText = i + ' : ' + index;
     });
   }
 }
 
-
-
 paint();
-
 
 var rTimer = null;
 
@@ -231,6 +247,4 @@ window.onresize = function() {
   rTimer = setTimeout(function() {
     paint();
   }, 200);
-}
-
-
+};
