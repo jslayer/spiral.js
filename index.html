@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Spiral</title>
+  <style>
+    body, html {
+      min-height : 100%;
+      width : 100%;
+      padding : 0;
+      margin : 0;
+    }
+    .container {
+      position : relative;
+      width: 100%;
+        height: 800px;
+    }
+    .container div {
+
+      background-color: red;
+      line-height: 80px;
+      text-align: center;
+      font-weight: bold;
+      color: #FFF;
+      font-size : 25px;
+    }
+  </style>
+    <script type="text/javascript" src="libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="jquery.spiral.js"></script>
+    <script type="text/javascript">
+        $(function() {
+            $('.container').spiral({
+                'boxSelector' : 'div',
+                'boxOffset'   : 10,
+                'transition'  : 700,
+                'containerPadding' : {
+                    left   : 10,
+                    top    : 10,
+                    right  : 10,
+                    bottom : 10
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <div style="width: 200px; height: 150px;">Text</div>
+    <div style="width: 200px; height: 200px;"></div>
+    <div style="width: 150px; height: 200px;"></div>
+    <div style="width: 50px; height: 100px;"></div>
+    <div style="width: 200px; height: 300px;"></div>
+    <div style="width: 400px; height: 300px; background-color: green"></div>
+    <div style="width: 200px; height: 100px;"></div>
+    <div style="width: 250px; height: 200px;"></div>
+    <div style="width: 200px; height: 150px;"></div>
+    <div style="width: 200px; height: 100px;"></div>
+    <div style="width: 200px; height: 150px;"></div>
+    <div style="width: 240px; height: 300px;"></div>
+    <div style="width: 100px; height: 100px;"></div>
+    <div style="width: 200px; height: 200px;"></div>
+    <div style="width: 100px; height: 100px;"></div>
+    <div style="width: 150px; height: 100px;"></div>
+    <div style="width: 300px; height: 300px;"></div>
+    <div style="width: 300px; height: 200px;"></div>
+    <div style="width: 100px; height: 100px;"></div>
+    <div style="width: 200px; height: 200px;"></div>
+</div>
+<!--script src="spiral"></script-->
+</body>
+</html>
