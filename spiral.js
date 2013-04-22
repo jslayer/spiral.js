@@ -47,6 +47,13 @@ var containerSize;
 
 var border = 10;
 
+var containerPadding = {
+  left   : 15,
+  top    : 5,
+  right  : 15,
+  bottom : 5
+};
+
 var rows = {};
 var rowIndex;
 
@@ -71,7 +78,7 @@ function prepareRowIndex(box) {
       width += item.width;
     });
 
-    if (box.width + width + 100 > containerSize.width) {
+    if (box.width + width + containerPadding.left + containerPadding.right + border*2 > containerSize.width) {
       rowIndex *= -1;
       if (rowIndex > 0) {
         rowIndex++;
@@ -100,7 +107,7 @@ function paint() {
   while(--boxesCounter >= 0) {
     var box = boxes[boxesCounter];
 
-    if (box.width + border * 2 > containerSize.width) {
+    if (box.width + containerPadding.left + containerPadding.right + border*2 > containerSize.width) {
       //skip long picture
       continue;
     }
@@ -146,7 +153,7 @@ function paint() {
       }
     });
 
-    var centerLeft = ((containerSize.width - rowWidth) / 2);
+    var centerLeft = ((containerSize.width - rowWidth + containerPadding.left - containerPadding.right) / 2);
 
     row.forEach(function(item, index) {
 
@@ -171,9 +178,9 @@ function paint() {
       if (Math.abs(currentRowIndex) > 1) {
         nearRow = rows[currentRowIndex - (currentRowIndex > 0 ? 1 : -1)].filter(function(item, ix) {
           var result = false,
-            x1 = this.left,
-            x2 = item.left + border,//???
-            xw1 = x1 + this.width,
+            x1 = this.left - border,
+            x2 = item.left,//???
+            xw1 = x1 + this.width + border,
             xw2 = x2 + item.width;
 
           if (x1 >= x2 && x1 <= xw2 || xw1 >= x2 && xw1 <= xw2 || x2 >= x1 && x2 <= xw1 || xw2 >= x1 && xw2 <= xw1) {
@@ -208,7 +215,8 @@ function paint() {
 
   var container = document.querySelector('.container');
 
-  container.style.top = -1 * minTop + 'px';
+  container.style.top = -1 * minTop + containerPadding.top + 'px';
+  container.style.minHeight = heightFilled.top + heightFilled.bottom - containerPadding.top + containerPadding.bottom - Math.abs(minTop) + 'px';
 
   var i;
 
