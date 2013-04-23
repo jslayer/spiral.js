@@ -1,7 +1,4 @@
 (function($) {
-  //todo - change for..in to $.each
-  //todo - newer use `if (expr) something` - use `if (expr) {\n something;\n}` instead;
-
   $.fn.spiral = function(options) {
     options = $.extend({
       boxSelector      : '>*',
@@ -37,11 +34,11 @@
 
         onResize();
 
-        //todo - we should not use global listener here
-        window.onresize = function() {
+        $(window).on('resize.spiral', function() {
           clearTimeout(timerId);
           timerId = setTimeout(onResize, 200);
-        };
+        });
+
       };
 
       function onResize() {
@@ -58,9 +55,9 @@
 
           width += (row.length + 1) * options.boxOffset;
 
-          for(i in row) {
-            width += row[i].width;
-          };
+          $.each(row, function(i, item) {
+            width += item.width;
+          });
 
           if (box.width + width + options.containerPadding.left + options.containerPadding.right + options.boxOffset * 2 > containerSize.width) {
             rowIndex *= -1;
@@ -108,36 +105,29 @@
           currentRowIndex = null,
           filled = null;
 
-        for(currentRowIndex in rows) {
+        $.each(rows, function(currentRowIndex, row) {
           filled = {
             left : 0
           };
 
-          if (!rows.hasOwnProperty(currentRowIndex)) {
-            continue;
-          }
-
           currentRowIndex = parseInt(currentRowIndex, 10);
-
-          row = rows[currentRowIndex];
 
           var rowWidth = (row.length + 1) * options.boxOffset,
             leftDelta = options.boxOffset,
             i = null;
 
-          for(i in row) {
-            rowWidth += row[i].width;
+          $.each(row, function(i, item) {
+            rowWidth += item.width;
             if (i % 2 === 0) {
-              leftDelta += row[i].width + options.boxOffset;
+              leftDelta += item.width + options.boxOffset;
             }
-          };
+          });
 
           var centerLeft = ((containerSize.width - rowWidth + options.containerPadding.left - options.containerPadding.right) / 2),
             el = null, item;
 
-          for(i in row) {
+          $.each(row, function(i, item) {
             i = parseInt(i);
-            item = row[i];
 
             item.left = centerLeft + filled.left + options.boxOffset;
 
@@ -158,7 +148,7 @@
             var nearRow, minDistance;
 
             if (Math.abs(currentRowIndex) > 1) {
-              nearRow = filterArray(rows[currentRowIndex - (currentRowIndex > 0 ? 1 : -1)], function(item, ix) {
+              nearRow = $.grep(rows[currentRowIndex - (currentRowIndex > 0 ? 1 : -1)], function(item, ix) {
                 var result = false,
                   x1 = this.left - options.boxOffset,
                   x2 = item.left,//???
@@ -172,7 +162,7 @@
                 return result;
               }, item);
 
-              minDistance = Math.min.apply(Math, mapArray(nearRow, function(item) {
+              minDistance = Math.min.apply(Math, $.map(nearRow, function(item) {
                 var value;
 
                 if (currentRowIndex > 0) {
@@ -188,32 +178,24 @@
                 item.top += (currentRowIndex > 0 ? 1 : -1) * (minDistance - options.boxOffset);
               }
             }
-          };
+          });
 
-          heightFilled[currentRowIndex > 0 ? 'top' : 'bottom'] += options.boxOffset + Math.max.apply(Math, mapArray(row, function(item) {
+          heightFilled[currentRowIndex > 0 ? 'top' : 'bottom'] += options.boxOffset + Math.max.apply(Math, $.map(row, function(item) {
             return item.height
           }));
-        }
+        });
 
         $container[0].style.top = -1 * minTop + options.containerPadding.top + 'px';
         $container[0].style.minHeight = heightFilled.top + heightFilled.bottom - options.containerPadding.top + options.containerPadding.bottom - Math.abs(minTop) + 'px';
 
         var i, j;
 
-        for(i in rows) {
-          var row;
-
-          if (!rows.hasOwnProperty(i)) {
-            continue;
-          }
-
-          row = rows[i];
-
-          for(j in row) {
-            row[j].node.style.top = row[j].top + 'px';
-            row[j].node.style.left = row[j].left + 'px';
-          };
-        }
+        $.each(rows, function(i, row) {
+          $.each(row, function(j, item) {
+            item.node.style.top = item.top + 'px';
+            item.node.style.left = item.left + 'px';
+          });
+        });
       };
 
       init();
@@ -239,59 +221,48 @@
         });
       });
 
-      return res.sort(function(a, b) { return a.height - b.height });
+      return sort(res, function(a, b) { return a.height - b.height });
     };
   };
 
   // Common functions
-  //todo - use $.grep instead of custom function
-  function filterArray(arr, callback, scope) {
-    var filtered = [], i;
 
-    if(!(arr instanceof Array) || !(callback instanceof Function)) {
-      return null;
+  function sort(arr, callback) {
+    if(Array.prototype.sort) {
+      return arr.sort(callback);
+    } else {
+      var s = arr,
+        buf = null,
+        len = s.length;
+
+      for(var j = 0; j < len; j++) {
+        for(var i = 0; i < len - 1; i++) {
+          if(callback(s[i], s[i+1])  >= 0) {
+            buf = s[i];
+            s[i] = s[i+1];
+            s[i+1] = buf;
+          }
+        }
+      }
+
+      return s;
     }
-
-    if(Array.prototype.filter) {
-      return arr.filter(callback, scope);
-    }
-
-    for(i in arr) {
-      i = parseInt(i);
-      if(callback.apply(scope, [arr[i], i, arr])) filtered.push(arr[i]);
-    }
-
-    return filtered;
-  }
-
-  //todo - use $.map instead of custom function
-  function mapArray(arr, callback, scope) {
-    var mapped = [], i;
-
-    if(!(arr instanceof Array) || !(callback instanceof Function)) {
-      return null;
-    }
-
-    if(Array.prototype.map) {
-      return arr.map(callback, scope);
-    }
-
-    for(i in arr) {
-      i = parseInt(i);
-      mapped.push(callback.apply(scope, [arr[i], i, arr]));
-    }
-
-    return mapped;
-  }
+  };
 
   function getPrefix() {
     var ua = navigator.userAgent, name = '';
 
-    if (ua.search(/MSIE/) >= 0) name = '-ms-';
-    if (ua.search(/Firefox/) >= 0) name = '-moz-';
-    if (ua.search(/Opera/) >= 0) name = '-o-';
-    if (ua.search(/Chrome/) >= 0) name = '-webkit-';
-    if (ua.search(/Safari/) >= 0) name = '-webkit-';
+    if (ua.search(/MSIE/) >= 0) {
+      name = '-ms-';
+    } else if (ua.search(/Firefox/) >= 0) {
+      name = '-moz-';
+    } else if (ua.search(/Opera/) >= 0) {
+      name = '-o-';
+    } else if (ua.search(/Chrome/) >= 0) {
+      name = '-webkit-';
+    } else if (ua.search(/Safari/) >= 0) {
+      name = '-webkit-';
+    }
 
     return name;
   }
