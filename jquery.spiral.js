@@ -39,15 +39,15 @@
           timerId = setTimeout(onResize, 200);
         });
 
-      };
+      }
 
       function onResize() {
         containerSize = getElemSize($container);
         paint();
-      };
+      }
 
       function prepareRowIndex(box) {
-        var width, row, i;
+        var width, row;
 
         while(true) {
           width = 0;
@@ -68,7 +68,7 @@
           }
           break;
         }
-      };
+      }
 
 
       function paint() {
@@ -102,7 +102,7 @@
           bottom : Math.floor(options.boxOffset / 2)
         },
           minTop = 0,
-          currentRowIndex = null,
+          //currentRowIndex = null,
           filled = null;
 
         $.each(rows, function(currentRowIndex, row) {
@@ -113,8 +113,7 @@
           currentRowIndex = parseInt(currentRowIndex, 10);
 
           var rowWidth = (row.length + 1) * options.boxOffset,
-            leftDelta = options.boxOffset,
-            i = null;
+            leftDelta = options.boxOffset;
 
           $.each(row, function(i, item) {
             rowWidth += item.width;
@@ -123,12 +122,9 @@
             }
           });
 
-          var centerLeft = ((containerSize.width - rowWidth + options.containerPadding.left - options.containerPadding.right) / 2),
-            el = null, item;
+          var centerLeft = ((containerSize.width - rowWidth + options.containerPadding.left - options.containerPadding.right) / 2);
 
           $.each(row, function(i, item) {
-            i = parseInt(i);
-
             item.left = centerLeft + filled.left + options.boxOffset;
 
             filled.left += item.width + options.boxOffset;
@@ -148,7 +144,7 @@
             var nearRow, minDistance;
 
             if (Math.abs(currentRowIndex) > 1) {
-              nearRow = $.grep(rows[currentRowIndex - (currentRowIndex > 0 ? 1 : -1)], function(item, ix) {
+              nearRow = $.grep(rows[currentRowIndex - (currentRowIndex > 0 ? 1 : -1)], function(item) {
                 var result = false,
                   x1 = this.left - options.boxOffset,
                   x2 = item.left,//???
@@ -188,15 +184,13 @@
         $container[0].style.top = -1 * minTop + options.containerPadding.top + 'px';
         $container[0].style.minHeight = heightFilled.top + heightFilled.bottom - options.containerPadding.top + options.containerPadding.bottom - Math.abs(minTop) + 'px';
 
-        var i, j;
-
         $.each(rows, function(i, row) {
           $.each(row, function(j, item) {
             item.node.style.top = item.top + 'px';
             item.node.style.left = item.left + 'px';
           });
         });
-      };
+      }
 
       init();
     });
@@ -206,7 +200,7 @@
         width  : $el.outerWidth(),
         height : $el.outerHeight()
       }
-    };
+    }
 
     function collectBoxes($boxes) {
       var $box, res = [];
@@ -222,7 +216,7 @@
       });
 
       return sort(res, function(a, b) { return a.height - b.height });
-    };
+    }
   };
 
   // Common functions
@@ -231,23 +225,22 @@
     if(Array.prototype.sort) {
       return arr.sort(callback);
     } else {
-      var s = arr,
-        buf = null,
-        len = s.length;
+      var buf = null,
+        len = arr.length;
 
       for(var j = 0; j < len; j++) {
         for(var i = 0; i < len - 1; i++) {
-          if(callback(s[i], s[i+1])  >= 0) {
-            buf = s[i];
-            s[i] = s[i+1];
-            s[i+1] = buf;
+          if(callback(arr[i], arr[i+1])  >= 0) {
+            buf = arr[i];
+            arr[i] = arr[i+1];
+            arr[i+1] = buf;
           }
         }
       }
 
-      return s;
+      return arr;
     }
-  };
+  }
 
   function getPrefix() {
     var ua = navigator.userAgent, name = '';
