@@ -1,10 +1,13 @@
+/**
+ * Version 0.1
+ */
 (function($) {
   $.fn.spiral = function(options) {
     options = $.extend({
-      boxSelector      : '>*',
-      boxOffset        : 10,  //px
-      transition       : 700, //ms
-      containerPadding : {
+      boxSelector : '>*',
+      boxOffset   : 10,  //px
+      transition  : 0.7, //s
+      padding     : {
         left   : 10, //px
         top    : 10, //px
         right  : 10, //px
@@ -26,7 +29,7 @@
         boxes = collectBoxes($boxes);
 
         $boxes.css('position', 'absolute');
-        $boxes.css(prefix + 'transition', 'top ' + options.transition + 'ms ease-out, left ' + options.transition + 'ms ease');
+        $boxes.css(prefix + 'transition', 'top ' + options.transition + 's ease-out, left ' + options.transition + 's ease');
 
         if('relative|absolute'.indexOf($container.css('position')) < 0) {
           $container.css('position', 'relative');
@@ -42,7 +45,6 @@
       }
 
       function onResize() {
-        containerSize = getElemSize($container);
         paint();
       }
 
@@ -59,7 +61,7 @@
             width += item.width;
           });
 
-          if (box.width + width + options.containerPadding.left + options.containerPadding.right + options.boxOffset * 2 > containerSize.width) {
+          if (box.width + width + options.padding.left + options.padding.right + options.boxOffset * 2 > containerSize.width) {
             rowIndex *= -1;
             if (rowIndex > 0) {
               rowIndex++;
@@ -72,11 +74,14 @@
 
 
       function paint() {
+        $container[0].style.minHeight = 0;
+
+        containerSize = getElemSize($container);
 
         var center = {
-          left : Math.floor(containerSize.width / 2),
-          top  : Math.floor(containerSize.height / 2)
-        },
+            left : Math.floor(containerSize.width / 2),
+            top  : Math.floor(containerSize.height / 2)
+          },
           boxesCounter = boxes.length,
           box = null;
 
@@ -85,7 +90,7 @@
         while(--boxesCounter >= 0) {
           box = boxes[boxesCounter];
 
-          if (box.width + options.containerPadding.left + options.containerPadding.right + options.boxOffset * 2 > containerSize.width) {
+          if (box.width + options.padding.left + options.padding.right + options.boxOffset * 2 > containerSize.width) {
             //skip long picture
             continue;
           }
@@ -98,11 +103,11 @@
         }
 
         var heightFilled = {
-          top    : Math.floor(options.boxOffset / 2),
-          bottom : Math.floor(options.boxOffset / 2)
-        },
+            top    : Math.floor(options.boxOffset / 2),
+            bottom : Math.floor(options.boxOffset / 2)
+          },
           minTop = 0,
-          //currentRowIndex = null,
+          boxHeight = 0,
           filled = null;
 
         $.each(rows, function(currentRowIndex, row) {
@@ -122,7 +127,7 @@
             }
           });
 
-          var centerLeft = ((containerSize.width - rowWidth + options.containerPadding.left - options.containerPadding.right) / 2);
+          var centerLeft = ((containerSize.width - rowWidth + options.padding.left - options.padding.right) / 2);
 
           $.each(row, function(i, item) {
             item.left = centerLeft + filled.left + options.boxOffset;
@@ -141,14 +146,14 @@
             /**
              * in order to have less whitespaces we should move boxes closer if possible
              */
-            var nearRow, minDistance;
+            var nearRow, minDistance, context = item;
 
             if (Math.abs(currentRowIndex) > 1) {
               nearRow = $.grep(rows[currentRowIndex - (currentRowIndex > 0 ? 1 : -1)], function(item) {
                 var result = false,
-                  x1 = this.left - options.boxOffset,
+                  x1 = context.left - options.boxOffset,
                   x2 = item.left,//???
-                  xw1 = x1 + this.width + options.boxOffset,
+                  xw1 = x1 + context.width + options.boxOffset,
                   xw2 = x2 + item.width;
 
                 if (x1 >= x2 && x1 <= xw2 || xw1 >= x2 && xw1 <= xw2 || x2 >= x1 && x2 <= xw1 || xw2 >= x1 && xw2 <= xw1) {
@@ -156,19 +161,19 @@
                 }
 
                 return result;
-              }, item);
+              });
 
               minDistance = Math.min.apply(Math, $.map(nearRow, function(item) {
                 var value;
 
                 if (currentRowIndex > 0) {
-                  value = item.top - this.top - this.height;
+                  value = item.top - context.top - context.height;
                 }
                 else {
-                  value = this.top - item.top - item.height;
+                  value = context.top - item.top - item.height;
                 }
                 return value;
-              }, item));
+              }));
 
               if (minDistance > options.boxOffset) {
                 item.top += (currentRowIndex > 0 ? 1 : -1) * (minDistance - options.boxOffset);
@@ -181,9 +186,31 @@
           }));
         });
 
-        $container[0].style.top = -1 * minTop + options.containerPadding.top + 'px';
-        $container[0].style.minHeight = heightFilled.top + heightFilled.bottom - options.containerPadding.top + options.containerPadding.bottom - Math.abs(minTop) + 'px';
+        //calculate coord
+        var coord = { min : 0, max : 0, height : 0 };
 
+        $.each(rows, function(index, row) {
+          coord[index > 0 ? 'min' : 'max'] = Math[index > 0 ? 'min' : 'max'].apply(Math, $.map(row, function(item) {
+            return item.top + (index < 0 ? item.height : 0);
+          }));
+        });
+
+        coord.height = coord.max - coord.min;
+
+        var realHeight = Math.max(coord.height, containerSize.height) + options.padding.top + options.padding.bottom;
+
+        //normalize rows
+        var deltaTop = (realHeight - coord.height) / 2 - coord.min;
+
+        $.map(rows, function(row) {
+          $.map(row, function(item) {
+            item.top += deltaTop;
+          });
+        });
+
+        $container[0].style.minHeight = realHeight + 'px';
+
+        //normalize the top potision of the actual items
         $.each(rows, function(i, row) {
           $.each(row, function(j, item) {
             item.node.style.top = item.top + 'px';
